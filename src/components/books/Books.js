@@ -177,10 +177,11 @@ function Books() {
     
     const renderInputFields = inputFields.map((field, index) => (
         <div key={index}>
+            <label><strong>{`${field.placeholder}: `}</strong></label>
             <input
                 type={field.type}
                 name={field.name}
-                placeholder={field.placeholder}
+                placeholder={`Write ${field.name}`}
                 value={newBook[field.name]}
                 onChange={handleInputChange}
             />

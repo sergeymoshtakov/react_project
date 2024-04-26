@@ -11,21 +11,24 @@ function Book({ book, onSave, onReadCountChange }) {
         review: book.review
     };
 
-    const [bookData, setBookData] = useState(initialBookState);
-    const [isReading, setIsReading] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [errors, setErrors] = useState({
-        name: '',
-        author: '',
-        genre: '',
-        year: '',
-        rating: '',
-        review: ''
-    });
-    const [readCount, setReadCount] = useState(0);
+    const [state, setState] = useState([
+        { key: 'bookData', value: initialBookState },
+        { key: 'isReading', value: false },
+        { key: 'isEditing', value: false },
+        { key: 'errors', value: { name: '', author: '', genre: '', year: '', rating: '', review: '' } },
+        { key: 'readCount', value: 0 }
+    ]);
+
+    const updateState = (key, newValue) => {
+        setState(prevState =>
+            prevState.map(item =>
+                item.key === key ? { ...item, value: newValue } : item
+            )
+        );
+    };
 
     const handleInputChange = (fieldName, value) => {
-        setBookData({ ...bookData, [fieldName]: value });
+        updateState('bookData', { ...state.find(item => item.key === 'bookData').value, [fieldName]: value });
         validateField(fieldName, value);
     };
 
@@ -66,7 +69,7 @@ function Book({ book, onSave, onReadCountChange }) {
             default:
                 break;
         }
-        setErrors({ ...errors, [fieldName]: errorMessage });
+        updateState('errors', { ...state.find(item => item.key === 'errors').value, [fieldName]: errorMessage });
     };
 
     const validateForm = () => {
@@ -75,7 +78,7 @@ function Book({ book, onSave, onReadCountChange }) {
         const newErrors = {};
 
         fieldsToValidate.forEach(fieldName => {
-            const value = bookData[fieldName];
+            const value = state.find(item => item.key === 'bookData').value[fieldName];
             switch (fieldName) {
                 case 'name':
                 case 'author':
@@ -109,7 +112,7 @@ function Book({ book, onSave, onReadCountChange }) {
             }
         });
 
-        setErrors(newErrors);
+        updateState('errors', newErrors);
         return isValid;
     };
 
@@ -117,13 +120,13 @@ function Book({ book, onSave, onReadCountChange }) {
         const file = e.target.files[0];
         const reader = new FileReader();
         reader.onload = () => {
-            setBookData({ ...bookData, text: reader.result });
+            updateState('bookData', { ...state.find(item => item.key === 'bookData').value, text: reader.result });
         };
         reader.readAsText(file);
     };
 
     const handleDownload = () => {
-        const { name, text } = bookData;
+        const { name, text } = state.find(item => item.key === 'bookData').value;
         const element = document.createElement("a");
         const file = new Blob([text], { type: 'text/plain' });
         element.href = URL.createObjectURL(file);
@@ -133,22 +136,22 @@ function Book({ book, onSave, onReadCountChange }) {
     };
 
     const toggleReading = () => {
-        setIsReading(!isReading);
-        if (isReading) {
-            setReadCount(readCount + 1);
-            onReadCountChange(readCount + 1);
+        updateState('isReading', !state.find(item => item.key === 'isReading').value);
+        if (state.find(item => item.key === 'isReading').value) {
+            updateState('readCount', state.find(item => item.key === 'readCount').value + 1);
+            onReadCountChange(state.find(item => item.key === 'readCount').value + 1);
         }
     };
 
     const toggleEditing = () => {
-        setIsEditing(!isEditing);
+        updateState('isEditing', !state.find(item => item.key === 'isEditing').value);
     };
 
     const handleSave = () => {
         const isValid = validateForm();
         if (isValid) {
-            onSave(bookData);
-            setIsEditing(false);
+            onSave(state.find(item => item.key === 'bookData').value);
+            updateState('isEditing', false);
         }
     };
 
@@ -163,7 +166,7 @@ function Book({ book, onSave, onReadCountChange }) {
 
     return (
         <div className='book-container'>
-            {isEditing ? (
+            {state.find(item => item.key === 'isEditing').value ? (
                 <div>
                     {fields.map(field => (
                         <div key={field.name}>
@@ -171,18 +174,18 @@ function Book({ book, onSave, onReadCountChange }) {
                             {field.type === 'textarea' ? (
                                 <textarea
                                     name={field.name}
-                                    value={bookData[field.name]}
+                                    value={state.find(item => item.key === 'bookData').value[field.name]}
                                     onChange={(e) => handleInputChange(field.name, e.target.value)}
                                 />
                             ) : (
                                 <input
                                     type={field.type}
                                     name={field.name}
-                                    value={bookData[field.name]}
+                                    value={state.find(item => item.key === 'bookData').value[field.name]}
                                     onChange={(e) => handleInputChange(field.name, e.target.value)}
                                 />
                             )}
-                            {errors[field.name] && <p className="error">{errors[field.name]}</p>}
+                            {state.find(item => item.key === 'errors').value[field.name] && <p className="error">{state.find(item => item.key === 'errors').value[field.name]}</p>}
                         </div>
                     ))}
                     <input type="file" onChange={handleFileChange} />
@@ -192,16 +195,16 @@ function Book({ book, onSave, onReadCountChange }) {
                 <div>
                     {fields.map(field => (
                         <p className='book-info' key={field.name}>
-                            <strong>{field.label}:</strong> {bookData[field.name]}
+                            <strong>{field.label}:</strong> {state.find(item => item.key === 'bookData').value[field.name]}
                         </p>
                     ))}
-                    <p className='book-info'><strong>Read Count:</strong> {readCount}</p>
-                    {!isReading ? (
+                    <p className='book-info'><strong>Read Count:</strong> {state.find(item => item.key === 'readCount').value}</p>
+                    {!state.find(item => item.key === 'isReading').value ? (
                         <button className="book-button" onClick={toggleReading}>Read Book</button>
                     ) : (
                         <div>
                             <button className="book-button" onClick={toggleReading}>Close Book</button>
-                            <div>{bookData.text}</div>
+                            <div>{state.find(item => item.key === 'bookData').value.text}</div>
                         </div>
                     )}
                     <br />
@@ -209,7 +212,7 @@ function Book({ book, onSave, onReadCountChange }) {
                 </div>
             )}
             <button className="book-button edit-button" onClick={toggleEditing}>
-                {isEditing ? "Cancel Edit" : "Edit Book"}
+                {state.find(item => item.key === 'isEditing').value ? "Cancel Edit" : "Edit Book"}
             </button>
         </div>
     );    
