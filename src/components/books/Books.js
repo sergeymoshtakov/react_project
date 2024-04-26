@@ -11,35 +11,40 @@ function Books() {
             author: 'Harper Lee',
             genre: 'Fiction',
             year: 1960,
-            text: 'The unforgettable novel of a childhood in a sleepy Southern town and the crisis of conscience that rocked it.'
+            text: 'The unforgettable novel of a childhood in a sleepy Southern town and the crisis of conscience that rocked it.',
+            readCount: 0
         },
         {
             name: '1984',
             author: 'George Orwell',
             genre: 'Dystopian fiction',
             year: 1949,
-            text: 'A dystopian social science fiction novel and cautionary tale.'
+            text: 'A dystopian social science fiction novel and cautionary tale.',
+            readCount: 0
         },
         {
             name: 'Pride and Prejudice',
             author: 'Jane Austen',
             genre: 'Romance',
             year: 1813,
-            text: 'A novel of manners first published in 1813. The story follows the main character, Elizabeth Bennet, as she deals with issues of manners, upbringing, morality, education, and marriage in the society of the landed gentry of the British Regency.'
+            text: 'A novel of manners first published in 1813. The story follows the main character, Elizabeth Bennet, as she deals with issues of manners, upbringing, morality, education, and marriage in the society of the landed gentry of the British Regency.',
+            readCount: 0
         },
         {
             name: 'The Catcher in the Rye',
             author: 'J.D. Salinger',
             genre: 'Bildungsroman',
             year: 1951,
-            text: 'A novel by J. D. Salinger, partially published in serial form in 1945–1946 and as a novel in 1951.'
+            text: 'A novel by J. D. Salinger, partially published in serial form in 1945–1946 and as a novel in 1951.',
+            readCount: 0
         },
         {
             name: 'The Great Gatsby',
             author: 'F. Scott Fitzgerald',
             genre: 'Tragedy',
             year: 1925,
-            text: 'A novel written by American author F. Scott Fitzgerald that follows a cast of characters living in the fictional towns of West Egg and East Egg on prosperous Long Island in the summer of 1922.'
+            text: 'A novel written by American author F. Scott Fitzgerald that follows a cast of characters living in the fictional towns of West Egg and East Egg on prosperous Long Island in the summer of 1922.',
+            readCount: 0
         }
     ]);
 
@@ -49,6 +54,7 @@ function Books() {
         genre: '',
         year: '',
         text: null,
+        readCount: 0,
     });
 
     const [errors, setErrors] = useState({
@@ -71,8 +77,15 @@ function Books() {
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
-        setNewBook({ ...newBook, text: file });
-        validateField('text', file);
+        const reader = new FileReader();
+
+        reader.onload = (event) => {
+            const text = event.target.result;
+            setNewBook({ ...newBook, text: text });
+            validateField('text', text); 
+        };
+
+        reader.readAsText(file); 
     };
 
     const handleReadCountChange = (index, newReadCount) => {
@@ -84,7 +97,6 @@ function Books() {
 
     useEffect(() => {
         setSortedBooks(books.slice().sort((a, b) => b.readCount - a.readCount));
-        console.log('we are here');
     }, [books]);
 
     const validateField = (fieldName, value) => {
@@ -130,7 +142,8 @@ function Books() {
         }
 
         if (!hasError) {
-            const newBooks = [...books, newBook];
+            const newBookWithReadCount = { ...newBook, readCount: 0 };
+            const newBooks = [...books, newBookWithReadCount];
             setBooks(newBooks);
             setNewBook({
                 name: '',
@@ -145,9 +158,7 @@ function Books() {
 
     const handleSave = (index, updatedBook) => {
         const updatedBooks = [...books];
-        updatedBooks[index] = updatedBook; 
-        console.log('we are here');
-        console.log(updatedBook);
+        updatedBooks[index] = {...updatedBook, readCount: updatedBooks[index].readCount,}; 
         setBooks(updatedBooks); 
     };
 
@@ -160,40 +171,29 @@ function Books() {
         />
     ));
 
+    const inputFields = [
+        { name: 'name', placeholder: 'Name' },
+        { name: 'author', placeholder: 'Author' },
+        { name: 'genre', placeholder: 'Genre' },
+        { name: 'year', placeholder: 'Year' },
+    ];
+    
+    const renderInputFields = inputFields.map((field, index) => (
+        <div key={index}>
+            <input
+                type={field.type}
+                name={field.name}
+                placeholder={field.placeholder}
+                value={newBook[field.name]}
+                onChange={handleInputChange}
+            />
+            {errors[field.name] && <p className="error">{errors[field.name]}</p>}
+        </div>
+    ));
+    
     return (
         <div className='container'>
-            <input
-                type="text"
-                name="name"
-                placeholder="Name"
-                value={newBook.name}
-                onChange={handleInputChange}
-            />
-            {errors.name && <p className="error">{errors.name}</p>}
-            <input
-                type="text"
-                name="author"
-                placeholder="Author"
-                value={newBook.author}
-                onChange={handleInputChange}
-            />
-            {errors.author && <p className="error">{errors.author}</p>}
-            <input
-                type="text"
-                name="genre"
-                placeholder="Genre"
-                value={newBook.genre}
-                onChange={handleInputChange}
-            />
-            {errors.genre && <p className="error">{errors.genre}</p>}
-            <input
-                type="text"
-                name="year"
-                placeholder="Year"
-                value={newBook.year}
-                onChange={handleInputChange}
-            />
-            {errors.year && <p className="error">{errors.year}</p>}
+            {renderInputFields}
             <input
                 type="file"
                 name="text"
@@ -202,7 +202,7 @@ function Books() {
             />
             {errors.text && <p className="error">{errors.text}</p>}
             <button className="book-button" onClick={addBook}>Add Book</button>
-
+    
             <SearchBooks books={books} />
             {booksContent}
             <TopBooks books={sortedBooks} />

@@ -1,59 +1,76 @@
-// SearchBooks.js
-import React, { useState } from 'react';
+import React, { PureComponent } from 'react';
 import '../styles/Books.css';
 
-function SearchBooks({ books }) {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [searchResults, setSearchResults] = useState([]);
+class SearchBooks extends PureComponent {
+    constructor(props) {
+        super(props);
+        this.state = {
+            searchTerm: '',
+            searchResults: []
+        };
+    }
 
-    const handleSearchChange = (e) => {
-        setSearchTerm(e.target.value);
+    handleSearchChange = (e) => {
+        this.setState({ searchTerm: e.target.value });
     };
 
-    const handleSearch = () => {
-        const results = books.filter(book => {
+    performSearch = (term) => {
+        const { books } = this.props;
+        return books.filter(book => {
             return (
-                book.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                book.genre.toLowerCase().includes(searchTerm.toLowerCase())
+                book.name.toLowerCase().includes(term.toLowerCase()) ||
+                book.author.toLowerCase().includes(term.toLowerCase()) ||
+                book.genre.toLowerCase().includes(term.toLowerCase())
             );
         });
-        setSearchResults(results);
     };
 
-    const resetSearch = () => {
-        setSearchTerm('');
-        setSearchResults([]);
+    handleSearch = () => {
+        const { searchTerm } = this.state;
+        const results = this.performSearch(searchTerm);
+        this.setState({ searchResults: results });
     };
 
-    return (
-        <div className='search-container'>
-            <input
-                className="search-input"
-                type="text"
-                placeholder="Search by title, author, or genre"
-                value={searchTerm}
-                onChange={handleSearchChange}
-            />
-            <button className="search-button" onClick={handleSearch}>Search</button>
-            <button className="search-button" onClick={resetSearch}>Reset</button>
+    resetSearch = () => {
+        this.setState({ searchTerm: '', searchResults: [] });
+    };
 
-            <div className="search-results">
-                <h2>Search Results</h2>
-                <ul>
-                    {searchResults.map((book, index) => (
-                        <li key={index}>
-                            <h3>{book.name}</h3>
-                            <p><strong>Author:</strong> {book.author}</p>
-                            <p><strong>Genre:</strong> {book.genre}</p>
-                            <p><strong>Year:</strong> {book.year}</p>
-                            <p>{book.text}</p>
-                        </li>
-                    ))}
-                </ul>
+    render() {
+        const { searchTerm, searchResults } = this.state;
+
+        return (
+            <div className='search-container'>
+                <input
+                    className="search-input"
+                    type="text"
+                    placeholder="Search by title, author, or genre"
+                    value={searchTerm}
+                    onChange={this.handleSearchChange}
+                />
+                <button className="search-button" onClick={this.handleSearch}>Search</button>
+                <button className="search-button" onClick={this.resetSearch}>Reset</button>
+
+                {searchResults.length > 0 && (
+                    <div className="search-results">
+                        <h3>Search results</h3>
+                        <ul className='search-results'>
+                            {searchResults.map((book, index) => (
+                                <li key={index}>
+                                    <h3>{book.name}</h3>
+                                    <p><strong>Author:</strong> {book.author}</p>
+                                    <p><strong>Genre:</strong> {book.genre}</p>
+                                    <p><strong>Year:</strong> {book.year}</p>
+                                    <p>{book.text}</p>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+                <br/>
+                <br/>
             </div>
-        </div>
-    );
+        );
+    }
 }
 
 export default SearchBooks;
