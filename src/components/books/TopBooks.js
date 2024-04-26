@@ -11,7 +11,7 @@ class TopBooks extends Component {
 
     getTopBooksOverall = () => {
         const { books } = this.props;
-        return books.sort((a, b) => b.readCount - a.readCount).slice(0, 10);
+        return books;
     };
 
     handleSearch = (type) => {
@@ -29,14 +29,12 @@ class TopBooks extends Component {
     getTopBooksByGenre = (genre) => {
         const { books } = this.props;
         return books.filter(book => book.genre.toLowerCase().includes(genre.toLowerCase()))
-                    .sort((a, b) => b.readCount - a.readCount)
                     .slice(0, 10);
     };
 
     getTopBooksByAuthor = (author) => {
         const { books } = this.props;
         return books.filter(book => book.author.toLowerCase().includes(author.toLowerCase()))
-                    .sort((a, b) => b.readCount - a.readCount)
                     .slice(0, 3);
     };
 

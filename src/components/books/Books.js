@@ -1,4 +1,4 @@
-import React, { useState, useEffect  } from 'react';
+import React, { useState } from 'react';
 import Book from './Book';
 import SearchBooks from './SearchBooks';
 import TopBooks from './TopBooks'; 
@@ -65,14 +65,10 @@ function Books() {
         text: '',
     });
 
-    const [sortedBooks, setSortedBooks] = useState([]);
-
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setNewBook({ ...newBook, [name]: value });
-        if (name !== 'text') {
-            validateField(name, value);
-        }
+        validateField(name, value);
     };
 
     const handleFileChange = (e) => {
@@ -94,10 +90,6 @@ function Books() {
         console.log(updatedBooks[index].readCount);
         setBooks(updatedBooks);
     };
-
-    useEffect(() => {
-        setSortedBooks(books.slice().sort((a, b) => b.readCount - a.readCount));
-    }, [books]);
 
     const validateField = (fieldName, value) => {
         let errorMessage = '';
@@ -130,13 +122,18 @@ function Books() {
         const { name, author, genre, year, text } = newBook;
         let hasError = false;
 
+        const errorsArray = Object.values(errors);
+        if (errorsArray.some(error => error)) {
+            hasError = true;
+        }
+
         if (!name.trim() || !author.trim() || !genre.trim() || !year.trim() || !text) {
             setErrors({
-                name: !name.trim() ? 'Name cannot be empty.' : '',
-                author: !author.trim() ? 'Author cannot be empty.' : '',
-                genre: !genre.trim() ? 'Genre cannot be empty.' : '',
-                year: !year.trim() ? 'Year cannot be empty.' : '',
-                text: !text ? 'Please select a file.' : '',
+                name: !name.trim() ? 'Name cannot be empty.' : errors.name,
+                author: !author.trim() ? 'Author cannot be empty.' : errors.author,
+                genre: !genre.trim() ? 'Genre cannot be empty.' : errors.genre,
+                year: !year.trim() ? 'Year cannot be empty.' : errors.year,
+                text: !text ? 'Please select a file.' : errors.text,
             });
             hasError = true;
         }
@@ -205,7 +202,7 @@ function Books() {
     
             <SearchBooks books={books} />
             {booksContent}
-            <TopBooks books={sortedBooks} />
+            <TopBooks books={books.slice().sort((a, b) => b.readCount - a.readCount)} />
         </div>
     );
 }
